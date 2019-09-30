@@ -22,8 +22,10 @@ fn main() -> Result<()> {
             println!("Unseen mails:");
             mails.iter().for_each(|Mail {uid, subject}| println!("  {}: {}", uid, subject));
 
-            session.mv(&mails, &cfg.destination_mailbox)?;
-            println!("Moved {} unseen messages from {} to {}", mails.len(), cfg.mailbox, cfg.destination_mailbox)
+            match session.mv(&mails, &cfg.destination_mailbox) {
+                Ok(_) => println!("Moved {} unseen messages from {} to {}", mails.len(), cfg.mailbox, cfg.destination_mailbox),
+                Err(e) => println!("Something went wrong: {}", e.to_string())
+            }
         }
 
         println!("Will IDLE and wait for changes in {} now", &cfg.mailbox);
