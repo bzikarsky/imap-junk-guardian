@@ -1,0 +1,10 @@
+[package]
+name = "imap-junk-guardian"
+version = "0.1.0"
+authors = ["Benjamin Zikarsky <benjamin@ziknet.de>"]
+edition = "2018"
+
+[dependencies]
+imap = "1.0.2"
+native-tls = "0.2.3"
+email = "0.0.20"
