@@ -8,6 +8,7 @@ use imap::types::{Flag, Uid};
 use native_tls::TlsStream;
 
 use config::Config;
+use util::RfC2047EncodedStr;
 
 mod config;
 mod util;
