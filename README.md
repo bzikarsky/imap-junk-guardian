@@ -6,3 +6,8 @@ JUNK to INBOX.
 
 It takes `IMAP_USER` and `IMAP_PASSWORD` from the environment
 to authenticate against outlook.com's IMAP host.
+
+## Docker
+
+The tool is published as a docker image at docker hub as 
+`bzikarsky/imap-junk-guardian`.
