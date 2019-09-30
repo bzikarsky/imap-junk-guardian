@@ -6,7 +6,7 @@ pub struct Config {
     pub port: u16,
     pub user: String,
     pub pass: String,
-    pub source_mailbox: String,
+    pub mailbox: String,
     pub destination_mailbox: String
 }
 
@@ -18,7 +18,7 @@ impl Config {
             port: 993,
             user: "foo".to_string(),
             pass: "bar".to_string(),
-            source_mailbox: "Junk".to_string(),
+            mailbox: "Junk".to_string(),
             destination_mailbox: "INBOX".to_string()
         }
     }

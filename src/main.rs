@@ -2,69 +2,31 @@ extern crate email;
 extern crate imap;
 extern crate native_tls;
 
-use std::net::TcpStream;
-
-use imap::types::{Flag, Uid};
-use native_tls::TlsStream;
-
-use config::Config;
-use util::RfC2047EncodedStr;
+use crate::config::Config;
+use crate::imap_wrapper::{Result, MailboxSession, Mail};
 
 mod config;
 mod util;
-
-type Session = imap::Session<TlsStream<TcpStream>>;
-type Result<T> = imap::error::Result<T>;
+mod imap_wrapper;
 
 fn main() -> Result<()> {
     let cfg = Config::from_env();
-    let mut session = connect(&cfg)?;
-
-    session.select(&cfg.source_mailbox)?;
+    let mut session = MailboxSession::connect(&cfg)?;
 
     loop {
-        let uids: Vec<String> = find_unseen_mails(&mut session)?.iter().map(|uid| uid.to_string()).collect();
+        let mails = session.unseen_mails()?;
 
-        if uids.is_empty() {
-            println!("{} does not contain unseen messages, nothing is moved", cfg.source_mailbox);
+        if mails.is_empty() {
+            println!("{} does not contain unseen messages, nothing is moved", cfg.mailbox);
         } else {
-            session.uid_mv(uids.join(","), &cfg.destination_mailbox)?;
-            println!("Moved {} unseen messages from {} to {}", uids.len(), cfg.source_mailbox, cfg.destination_mailbox)
+            println!("Unseen mails:");
+            mails.iter().for_each(|Mail {uid, subject}| println!("  {}: {}", uid, subject));
+
+            session.mv(&mails, &cfg.destination_mailbox)?;
+            println!("Moved {} unseen messages from {} to {}", mails.len(), cfg.mailbox, cfg.destination_mailbox)
         }
 
-        println!("Will IDLE and wait for changes in {} now", &cfg.source_mailbox);
-        session.idle()?.wait_keepalive()?;
+        println!("Will IDLE and wait for changes in {} now", &cfg.mailbox);
+        session.idle_and_keepalive()?;
     }
-}
-
-
-fn connect(cfg: &Config) -> Result<Session> {
-    let tls = native_tls::TlsConnector::builder().build().unwrap();
-    let client = imap::connect((cfg.host.as_str(), cfg.port), &cfg.host, &tls)?;
-
-    client.login(&cfg.user, &cfg.pass)
-        .map_err(|e| e.0)
-}
-
-fn find_unseen_mails(session: &mut Session) -> Result<Vec<Uid>> {
-    println!("Unseen mails:");
-
-    let uids: Vec<Uid> = session.fetch("1:*", "(ENVELOPE UID FLAGS)")?.iter().filter_map(|mail| {
-        let subject = mail.envelope()?.subject.unwrap().rfc2047_decode();
-        let uid = mail.uid.unwrap();
-        let seen = mail.flags().iter().any(|f| match f {
-            Flag::Seen => true,
-            _ => false
-        });
-
-
-        if !seen {
-            println!("  {}: {}", uid, subject);
-            Some(uid)
-        } else {
-            None
-        }
-    }).collect();
-
-    Ok(uids)
 }
