@@ -1,33 +1,24 @@
-# select build image
 FROM rust:1.37 as build
 
-# create a new empty shell project
+# create a new empty shell project to cache deoendencies
 RUN USER=root cargo new --bin app
 WORKDIR /app
-
-# copy over your manifests
 COPY ./Cargo.lock ./Cargo.lock
 COPY ./Cargo.toml ./Cargo.toml
-
-# this build step will cache your dependencies
 RUN cargo build --release
+
+# Delete fake source and build artifacts, add real code and rebuild
 RUN rm src/*.rs
-
-# copy your source tree
-COPY ./src ./src
-
-# build for release
 RUN rm ./target/release/deps/imap_junk_guardian*
+COPY ./src ./src
 RUN cargo build --release
 
-# our final base
+# Create a slim final image
 FROM debian:buster-slim
 
 RUN apt-get update && \
     apt-get install -y libssl1.1 ca-certificates
 
-# copy the build artifact from the build stage
 COPY --from=build /app/target/release/imap-junk-guardian .
 
-# set the startup command to run your binary
-CMD ["./imap-junk-guardian"]h
+CMD ["./imap-junk-guardian"]
