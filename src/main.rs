@@ -11,10 +11,13 @@ mod imap_wrapper;
 
 fn main() -> Result<()> {
     let cfg = Config::from_env();
-    let mut session = MailboxSession::connect(&cfg)?;
+    let mut session = match MailboxSession::connect(&cfg) {
+        Ok(session) => session,
+        Err(e) => panic!("Connect and select failed: {}", e)
+    };
 
     loop {
-        let mails = session.unseen_mails()?;
+        let mails = session.unseen_mails();
 
         if mails.is_empty() {
             println!("{} does not contain unseen messages, nothing is moved", cfg.mailbox);
@@ -29,6 +32,11 @@ fn main() -> Result<()> {
         }
 
         println!("Will IDLE and wait for changes in {} now", &cfg.mailbox);
-        session.idle_and_keepalive()?;
+
+        if let Err(e) = session.idle_and_keepalive() {
+            panic!("Session idle and keepalive failed: {}", e)
+        }
+
+        println!("{} changed - will check again", &cfg.mailbox)
     }
 }

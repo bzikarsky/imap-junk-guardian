@@ -40,8 +40,8 @@ impl MailboxSession {
     }
 
 
-    pub fn unseen_mails(&mut self) -> Result<Vec<Mail>> {
-        let mails = match self.session.fetch("1:*", "(ENVELOPE UID FLAGS)") {
+    pub fn unseen_mails(&mut self) -> Vec<Mail> {
+        match self.session.fetch("1:*", "(ENVELOPE UID FLAGS)") {
             Ok(fetch) => fetch.iter().filter_map(|mail| {
                 let subject = mail.envelope()?.subject.unwrap().rfc2047_decode();
                 let uid = mail.uid.unwrap();
@@ -57,9 +57,8 @@ impl MailboxSession {
                 }
             }).collect(),
             Err(_) => Vec::new()
-        };
+        }
 
-        Ok(mails)
     }
 
     pub fn mv(&mut self, uids: &Vec<Mail>, destination: &str) -> Result<()> {
