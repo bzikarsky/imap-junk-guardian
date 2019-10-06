@@ -3,6 +3,7 @@ use std::net::TcpStream;
 
 use imap::types::{Flag, Uid};
 use native_tls::TlsStream;
+use log::info;
 
 use crate::util::RfC2047EncodedStr;
 use crate::config::Config;
@@ -18,8 +19,11 @@ pub struct MailboxSession {
 impl MailboxSession {
     pub fn connect(cfg: &Config) -> Result<Self> {
         let tls = native_tls::TlsConnector::builder().build().unwrap();
+
+        info!("Connecting to {}:{}", cfg.host, cfg.port);
         let client = imap::connect((cfg.host.as_str(), cfg.port), &cfg.host, &tls)?;
 
+        info!("Logging in as {}", cfg.user);
         let session = client.login(&cfg.user, &cfg.pass)
             .map_err(|e| e.0)?;
 
@@ -27,6 +31,7 @@ impl MailboxSession {
     }
 
     fn new(mut session: Session, mailbox: &str) -> Result<Self> {
+        info!("Selecting mailbox {}", mailbox);
         session.select(mailbox)?;
 
         Ok(MailboxSession {
@@ -62,6 +67,7 @@ impl MailboxSession {
     }
 
     pub fn mv(&mut self, uids: &Vec<Mail>, destination: &str) -> Result<()> {
+        info!("Moving {} mails to {}", uids.len(), destination);
         let string_uids: Vec<String> = uids.iter().map(|mail| mail.uid.to_string()).collect();
         self.session.uid_mv(string_uids.join(","), destination)
     }
