@@ -4,7 +4,7 @@ extern crate native_tls;
 extern crate log;
 extern crate pretty_env_logger;
 
-use log::{info, error};
+use log::{info, error, warn};
 
 use crate::config::Config;
 use crate::imap_wrapper::{Result, MailboxSession, Mail};
@@ -17,10 +17,8 @@ fn main() -> Result<()> {
     pretty_env_logger::init_timed();
 
     let cfg = Config::from_env();
-    let mut session = match MailboxSession::connect(&cfg) {
-        Ok(session) => session,
-        Err(e) => panic!("Connect and select failed: {}", e)
-    };
+
+    let mut session = connect(&cfg);
 
     loop {
         let mails = session.unseen_mails();
@@ -40,9 +38,19 @@ fn main() -> Result<()> {
         info!("Will IDLE and wait for changes in {} now", &cfg.mailbox);
 
         if let Err(e) = session.idle_and_keepalive() {
-            panic!("Session idle and keepalive failed: {}", e)
+            warn!("Session idle and keepalive failed: {}", e);
+            warn!("Reconnecting...");
+            session = connect(&cfg);
+            continue
         }
 
         info!("{} changed - will check again", &cfg.mailbox)
+    }
+}
+
+fn connect(cfg: &Config) -> MailboxSession {
+    match MailboxSession::connect(&cfg) {
+        Ok(session) => session,
+        Err(e) => panic!("Connect and select failed: {}", e)
     }
 }
