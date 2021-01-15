@@ -48,7 +48,8 @@ impl MailboxSession {
     pub fn unseen_mails(&mut self) -> Vec<Mail> {
         match self.session.fetch("1:*", "(ENVELOPE UID FLAGS)") {
             Ok(fetch) => fetch.iter().filter_map(|mail| {
-                let subject = mail.envelope()?.subject.unwrap().rfc2047_decode();
+                let subject = mail.envelope()?.subject
+                    .map_or_else(|| "(NO SUBJECT)".to_string(), |bytes| std::str::from_utf8(bytes).unwrap_or("(decode failure)").rfc2047_decode());
                 let uid = mail.uid.unwrap();
                 let seen = mail.flags().iter().any(|f| match f {
                     Flag::Seen => true,

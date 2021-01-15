@@ -23,4 +23,4 @@ RUN apk add ca-certificates openssl
 
 COPY --from=build /app/target/x86_64-unknown-linux-musl/release/imap-junk-guardian .
 
-CMD ["./imap-junk-guardian"]
+ENTRYPOINT ["./imap-junk-guardian"]

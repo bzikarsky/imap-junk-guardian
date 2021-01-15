@@ -5,8 +5,9 @@ authors = ["Benjamin Zikarsky <benjamin@ziknet.de>"]
 edition = "2018"
 
 [dependencies]
-imap = "1.0.2"
-native-tls = "0.2.3"
-email = "0.0.20"
-log = "0.4.8"
-pretty_env_logger = "0.3.1"
+imap = "2.4.1"
+email = "0.0.21"
+native-tls = "0.2.7"
+log = "0.4.13"
+pretty_env_logger = "0.4.0"
+ctrlc = "3.1.7"

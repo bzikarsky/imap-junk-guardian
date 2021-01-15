@@ -3,6 +3,7 @@ extern crate imap;
 extern crate native_tls;
 extern crate log;
 extern crate pretty_env_logger;
+extern crate ctrlc;
 
 use log::{info, error, warn};
 
@@ -19,6 +20,10 @@ fn main() -> Result<()> {
     let cfg = Config::from_env();
 
     let mut session = connect(&cfg);
+
+    ctrlc::set_handler(move || {
+        std::process::exit(0);
+    }).expect("Error setting Ctrl-C handler");
 
     loop {
         let mails = session.unseen_mails();

@@ -34,6 +34,8 @@ impl Config {
             cfg.pass = pass
         }
 
+        println!("{:?}", cfg);
+
         return cfg
     }
 }
